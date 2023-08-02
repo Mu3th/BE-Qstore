@@ -8,7 +8,7 @@ cors = CORS(app)
 def connect():
     return psycopg2.connect(
                 #host = "dpg-cj3trj5iuie55pnpabcg-a.oregon-postgres.render.com",
-                host = "dpdpg-cj3trj5iuie55pnpabcg-a", 
+                host = "dpg-cj3trj5iuie55pnpabcg-a", 
                 dbname = "qstore_7it7", 
                 user = "qstore", 
                 password = "QJDhQO5iVryRiBbkRV57O9Uf11uTAGue", 
