@@ -1,14 +1,15 @@
 import psycopg2
-from flask import Flask, Response, request, jsonify
+from flask import Flask, Response, request, jsonify, send_file
 from flask_cors import CORS, cross_origin
+# from PIL import Image
 
 app = Flask(__name__)
 cors = CORS(app)
 
 def connect():
     return psycopg2.connect(
-                #host = "dpg-cj3trj5iuie55pnpabcg-a.oregon-postgres.render.com",
-                host = "dpg-cj3trj5iuie55pnpabcg-a", 
+                host = "dpg-cj3trj5iuie55pnpabcg-a.oregon-postgres.render.com",
+                #host = "dpg-cj3trj5iuie55pnpabcg-a", 
                 dbname = "qstore_7it7", 
                 user = "qstore", 
                 password = "QJDhQO5iVryRiBbkRV57O9Uf11uTAGue", 
@@ -94,10 +95,52 @@ def getCategories():
         conn = connect()
         cur = conn.cursor()
         cur.execute("select * from categories")
-        categories = cur.fetchall()
-        response = jsonify(categories)
+        result = cur.fetchall()
+        categories = []
+        #print(categories)
+        for item in result:
+            path = "./" + item[2]
+            category = {
+                "id": item[0],
+                "name": item[1],
+                "image": path,
+            }
+            # print(category)
+            categories.append(category)
+        # print(categories)
+        response = jsonify({"categories": categories})
         response.status_code = 200
         return response
+    except Exception as e :
+        print(e)
+    finally:
+        conn.commit()
+        cur.close()
+        conn.close()
+
+##Products 
+@app.route("/product/add", methods = ['POST'])
+def addProduct():
+    try:
+        _json = request.json
+        name = _json['name']
+        price = _json['price']
+        offer_price = _json['offer_price']
+        description = _json['description']
+        category_id = _json['category_id']
+        amount = _json['amount']
+        #image = _json['image']
+        if name and price and category_id and amount and request.method == 'POST':
+            conn = connect
+            cur = conn.cursor()
+            #write code here
+            cur.execute("""insert into products 
+                        ( name, price, offer_price, description, category_id, amount) 
+                        values (%s, %s, %s, %s, %s, %s);""", 
+                        (name, price, offer_price, description, category_id, amount,))
+            response = jsonify('Product added successfully')
+            response.status_code = 201
+            return response
     except Exception as e :
         print(e)
     finally:
@@ -111,4 +154,4 @@ def post_example():
     return jsonify(message="POST request returned")
 
 if __name__ == '__main__':
-    app.run(host = "192.168.1.113", port=8000)
+    app.run(host = "192.168.1.69", port=8000)
