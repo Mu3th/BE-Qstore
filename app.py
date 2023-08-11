@@ -8,8 +8,8 @@ cors = CORS(app)
 
 def connect():
     return psycopg2.connect(
-                # host = "dpg-cj3trj5iuie55pnpabcg-a.oregon-postgres.render.com",
-                host = "dpg-cj3trj5iuie55pnpabcg-a", 
+                host = "dpg-cj3trj5iuie55pnpabcg-a.oregon-postgres.render.com",
+                # host = "dpg-cj3trj5iuie55pnpabcg-a", 
                 dbname = "qstore_7it7", 
                 user = "qstore", 
                 password = "QJDhQO5iVryRiBbkRV57O9Uf11uTAGue", 
@@ -97,9 +97,10 @@ def getCategories():
         cur.execute("select * from categories")
         result = cur.fetchall()
         categories = []
-        #print(categories)
+        # print(result)
         for item in result:
-            path = "./" + item[2]
+            name = item[2].split('/')
+            path = "https://qstore-sesb.onrender.com/image?name=" + name[-1]
             category = {
                 "id": item[0],
                 "name": item[1],
@@ -148,10 +149,22 @@ def addProduct():
         cur.close()
         conn.close()
 
+@app.route("/image", methods=["GET"])
+def getImage():
+    """GET in server"""
+    # return jsonify(message="POST request returned")
+    name = request.args.get('name', 'Anonymous')
+    image_path = f'./uploads/{name}'
+    image =  send_file(image_path, mimetype='image/jpeg')
+    return image
+
 @app.route("/fuck", methods=["GET"])
 def post_example():
     """GET in server"""
-    return jsonify(message="POST request returned")
+    # return jsonify(message="POST request returned")
+    image_path = "./uploads/123.jpg"
+    image =  send_file(image_path, mimetype='image/jpeg')
+    return image
 
 if __name__ == '__main__':
-    app.run(host = "192.168.1.69", port=8000)
+    app.run(host = "192.168.1.107", port=8000)
