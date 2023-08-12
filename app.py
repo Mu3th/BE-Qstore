@@ -159,6 +159,91 @@ def addProduct():
         cur.close()
         conn.close()
 
+@app.route("/product/update/<int:id>", methods = ['PUT'])
+def updateProduct(id):
+    try:
+        # Get the name parameter from the request
+        name = request.form.get('name')
+        price = request.form.get('price')
+        offer_price = request.form.get('offer_price')
+        quantity = request.form.get('quantity')
+        category_id = request.form.get('category_id')
+        description = request.form.get('description')
+        if name and price and quantity and category_id and request.method == 'PUT':
+            conn = connect()
+            cur = conn.cursor()   
+            # Check if an image file was uploaded
+            if 'image' not in request.files:
+                return 'No image file provided', 400
+            image_file = request.files['image']
+            # Check if the file has a filename
+            if image_file.filename == '':
+                return 'Empty filename', 400
+            # Save the image to a desired location
+            image_path = f'uploads/{image_file.filename}'
+            image_file.save(image_path)    
+            cur.execute("update products set name = %s, price = %s, offer_price = %s, quantity = %s, category_id = %s, description = %s, image = %s where id = %s;", (name, price, offer_price, quantity, category_id, description, image_path, id,))
+            response = jsonify('Product updated successfully')
+            response.status_code = 200
+            return response
+    except Exception as e :
+        print(e)
+    finally:
+        conn.commit()
+        cur.close()
+        conn.close()
+
+@app.route("/products/delete/<int:id>", methods = ['DELETE'])
+def delProduct(id):
+    try:
+        conn = connect()
+        cur = conn.cursor()
+        cur.execute("delete from products where id = %s", (id,))
+        response = jsonify("Product deleted successfully")
+        response.status_code = 200
+        return response
+    except Exception as e :
+        print(e)
+    finally:
+        conn.commit()
+        cur.close()
+        conn.close()
+
+@app.route("/products/<int:id>", methods = ['GET'])
+def getProducts(id):
+    try:
+        conn = connect()
+        cur = conn.cursor()
+        cur.execute("select * from products where category_id = %s", (id,))
+        result = cur.fetchall()
+        products = []
+        # print(result)
+        for item in result:
+            name = item[7].split('/')
+            path = "https://qstore-sesb.onrender.com/image?name=" + name[-1]
+            product = {
+                "id": item[0],
+                "name": item[1],
+                "price": item[2],
+                "offer_price": item[3],
+                "quantity": item[4],
+                "category_id": item[5],
+                "description": item[6],
+                "image": path,
+            }
+            # print(category)
+            products.append(product)
+        # print(categories)
+        response = jsonify({"products": products})
+        response.status_code = 200
+        return response
+    except Exception as e :
+        print(e)
+    finally:
+        conn.commit()
+        cur.close()
+        conn.close()
+
 @app.route("/image", methods=["GET"])
 def getImage():
     """GET in server"""
