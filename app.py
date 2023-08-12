@@ -123,22 +123,32 @@ def getCategories():
 @app.route("/product/add", methods = ['POST'])
 def addProduct():
     try:
-        _json = request.json
-        name = _json['name']
-        price = _json['price']
-        offer_price = _json['offer_price']
-        description = _json['description']
-        category_id = _json['category_id']
-        amount = _json['amount']
-        #image = _json['image']
-        if name and price and category_id and amount and request.method == 'POST':
-            conn = connect
-            cur = conn.cursor()
-            #write code here
+        # Get the name parameter from the request
+        name = request.form.get('name')
+        price = request.form.get('price')
+        offer_price = request.form.get('offer_price')
+        quantity = request.form.get('quantity')
+        category_id = request.form.get('category_id')
+        description = request.form.get('description')
+        if name and price and quantity and category_id and request.method == 'POST':
+            conn = connect()
+            cur = conn.cursor()   
+            # Check if an image file was uploaded
+            if 'image' not in request.files:
+                return 'No image file provided', 400
+            image_file = request.files['image']
+            # Check if the file has a filename
+            if image_file.filename == '':
+                return 'Empty filename', 400
+            # Save the image to a desired location
+            image_path = f'uploads/{image_file.filename}'
+            image_file.save(image_path)    
+            # cur.execute("insert into categories ( name, image) values (%s, %s);", 
+            #             (name,image_path,))
             cur.execute("""insert into products 
-                        ( name, price, offer_price, description, category_id, amount) 
-                        values (%s, %s, %s, %s, %s, %s);""", 
-                        (name, price, offer_price, description, category_id, amount,))
+                        ( name, price, offer_price, quantity, category_id, description, image) 
+                        values (%s, %s, %s, %s, %s, %s, %s);""", 
+                        (name, price, offer_price, quantity, category_id, description, image_path,))
             response = jsonify('Product added successfully')
             response.status_code = 201
             return response
